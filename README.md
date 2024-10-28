@@ -72,9 +72,9 @@ To run this sample, you need to setup your source data, setup your vector store 
 
 ### 2.1. Source PDF File
 
-You will need to supply some source pdf files to load into the vector store\
+You will need to supply some source **pdf files** to load into the **vector store**
 
-Once you have a file ready, update the `**PdfFilePaths**` array in the `**appsettings.json**` file with the path to the file.
+Once you have a file ready, update the **PdfFilePaths** array in the **appsettings.json** file with the path to the file
 
 ```json
 {
@@ -84,105 +84,102 @@ Once you have a file ready, update the `**PdfFilePaths**` array in the `**appset
 }
 ```
 
-Why not try the semantic kernel documentation as your input.
+Why not try the semantic kernel documentation as your input
 
-You can download it as a PDF from the https://learn.microsoft.com/en-us/semantic-kernel/overview/ page.
+You can download it as a PDF from the https://learn.microsoft.com/en-us/semantic-kernel/overview/ page
 
 See the Download PDF button at the bottom of the page.
 
-### Azure OpenAI Chat Completion
+### 2.2. Azure OpenAI Chat Completion
 
-For Azure OpenAI Chat Completion, you need to add the following secrets:
+For **Azure OpenAI Chat Completion**, you need to add the following secrets:
 
 ```cli
 dotnet user-secrets set "AIServices:AzureOpenAI:Endpoint" "https://<yourservice>.openai.azure.com"
 dotnet user-secrets set "AIServices:AzureOpenAI:ChatDeploymentName" "<your deployment name>"
 ```
 
-Note that the code doesn't use an API Key to communicate with Azure Open AI, but rather an `AzureCliCredential` so no api key secret is required.
+Note that the code doesn't use an **API Key** to communicate with Azure Open AI, but rather an **AzureCliCredential** so no api key secret is required
 
-### OpenAI Chat Completion
+### 2.3. OpenAI Chat Completion
 
-For OpenAI Chat Completion, you need to add the following secrets:
+For **OpenAI Chat Completion**, you need to add the following secrets:
 
 ```cli
 dotnet user-secrets set "AIServices:OpenAI:ModelId" "<your model id>"
 dotnet user-secrets set "AIServices:OpenAI:ApiKey" "<your api key>"
 ```
 
-Optionally, you can also provide an Org Id
+Optionally, you can also provide an **Org Id**
 
 ```cli
 dotnet user-secrets set "AIServices:OpenAI:OrgId" "<your org id>"
 ```
 
-### Azure OpenAI Embeddings
+### 2.4. Azure OpenAI Embeddings
 
-For Azure OpenAI Embeddings, you need to add the following secrets:
+For **Azure OpenAI Embeddings**, you need to add the following secrets:
 
 ```cli
 dotnet user-secrets set "AIServices:AzureOpenAIEmbeddings:Endpoint" "https://<yourservice>.openai.azure.com"
 dotnet user-secrets set "AIServices:AzureOpenAIEmbeddings:DeploymentName" "<your deployment name>"
 ```
 
-Note that the code doesn't use an API Key to communicate with Azure Open AI, but rather an `AzureCliCredential` so no api key secret is required.
+Note that the code doesn't use an **API Key** to communicate with Azure Open AI, but rather an **AzureCliCredential** so no api key secret is required
 
-### OpenAI Embeddings
+### 2.5. OpenAI Embeddings
 
-For OpenAI Embeddings, you need to add the following secrets:
+For **OpenAI Embeddings**, you need to add the following secrets:
 
 ```cli
 dotnet user-secrets set "AIServices:OpenAIEmbeddings:ModelId" "<your model id>"
 dotnet user-secrets set "AIServices:OpenAIEmbeddings:ApiKey" "<your api key>"
 ```
 
-Optionally, you can also provide an Org Id
+Optionally, you can also provide an **Org Id**
 
 ```cli
 dotnet user-secrets set "AIServices:OpenAIEmbeddings:OrgId" "<your org id>"
 ```
 
-### Azure AI Search
+### 2.6. Azure AI Search
 
-If you want to use Azure AI Search as your vector store, you will need to create an instance of Azure AI Search and add
-the following secrets here:
+If you want to use **Azure AI Search** as your vector store, you will need to create an instance of Azure AI Search and add the following **secrets** here:
 
 ```cli
 dotnet user-secrets set "VectorStores:AzureAISearch:Endpoint" "https://<yourservice>.search.windows.net"
 dotnet user-secrets set "VectorStores:AzureAISearch:ApiKey" "<yoursecret>"
 ```
 
-### Azure CosmosDB MongoDB
+### 2.7. Azure CosmosDB MongoDB
 
-If you want to use Azure CosmosDB MongoDB as your vector store, you will need to create an instance of Azure CosmosDB MongoDB and add
-the following secrets here:
+If you want to use **Azure CosmosDB MongoDB** as your vector store, you will need to create an instance of Azure CosmosDB MongoDB and add the following **secrets** here:
 
 ```cli
 dotnet user-secrets set "VectorStores:AzureCosmosDBMongoDB:ConnectionString" "<yourconnectionstring>"
 dotnet user-secrets set "VectorStores:AzureCosmosDBMongoDB:DatabaseName" "<yourdbname>"
 ```
 
-### Azure CosmosDB NoSQL
+### 2.8. Azure CosmosDB NoSQL
 
-If you want to use Azure CosmosDB NoSQL as your vector store, you will need to create an instance of Azure CosmosDB NoSQL and add
-the following secrets here:
+If you want to use **Azure CosmosDB NoSQL** as your vector store, you will need to create an instance of Azure CosmosDB NoSQL and add the following **secrets** here:
 
 ```cli
 dotnet user-secrets set "VectorStores:AzureCosmosDBNoSQL:ConnectionString" "<yourconnectionstring>"
 dotnet user-secrets set "VectorStores:AzureCosmosDBNoSQL:DatabaseName" "<yourdbname>"
 ```
 
-### Qdrant
+### 2.9. Qdrant
 
-If you want to use Qdrant as your vector store, you will need to have an instance of Qdrant available.
+If you want to use **Qdrant** as your vector store, you will need to have an instance of Qdrant available
 
-You can use the following command to start a Qdrant instance in docker, and this will work with the default configured settings:
+You can use the following command to start a **Qdrant instance in Docker**, and this will work with the default configured settings:
 
 ```cli
 docker run -d --name qdrant -p 6333:6333 -p 6334:6334 qdrant/qdrant:latest
 ```
 
-If you want to use a different instance of Qdrant, you can update the appsettings.json file or add the following secrets to reconfigure:
+If you want to use a **different instance of Qdrant**, you can update the **appsettings.json** file or add the following secrets to reconfigure:
 
 ```cli
 dotnet user-secrets set "VectorStores:Qdrant:Host" "<yourservice>"
@@ -191,17 +188,17 @@ dotnet user-secrets set "VectorStores:Qdrant:Https" "true"
 dotnet user-secrets set "VectorStores:Qdrant:ApiKey" "<yoursecret>"
 ```
 
-### Redis
+### 2.10. Redis
 
-If you want to use Redis as your vector store, you will need to have an instance of Redis available.
+If you want to use **Redis** as your vector store, you will need to have an instance of Redis available
 
-You can use the following command to start a Redis instance in docker, and this will work with the default configured settings:
+You can use the following command to start a **Redis instance in Docker**, and this will work with the default configured settings:
 
 ```cli
 docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 redis/redis-stack:latest
 ```
 
-If you want to use a different instance of Redis, you can update the appsettings.json file or add the following secret to reconfigure:
+If you want to use a **different instance of Redis**, you can update the appsettings.json file or add the following secret to reconfigure:
 
 ```cli
 dotnet user-secrets set "VectorStores:Redis:ConnectionConfiguration" "<yourredisconnectionconfiguration>"
