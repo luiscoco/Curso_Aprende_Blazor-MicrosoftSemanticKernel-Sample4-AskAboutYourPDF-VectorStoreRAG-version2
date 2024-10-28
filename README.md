@@ -779,6 +779,38 @@ internal sealed class DataLoader<TKey>(
 
 ## 7. RAG Chat Service
 
+This code defines a .NET class, **RAGChatService**, which serves as the core service for a system utilizing **Retrieval-Augmented Generation (RAG)** to interact with **Large Language Models (LLMs)** and manage data using vector storage
+
+**Imports and Namespace**:
+
+The code includes necessary namespaces from Microsoft, focusing on dependency injection, hosting, options configuration, and various Semantic Kernel components for handling vector storage and LLM interaction.
+
+The **RAGChatService** class is generic, allowing for different types of data model keys (TKey)
+
+It implements IHostedService, making it compatible with .NET's generic hosting environment for long-running background services.
+
+The **class constructor** accepts dependencies like IDataLoader (for data loading), VectorStoreTextSearch (for vector-based text searching), and Kernel (to interact with the LLM).
+
+**StartAsync**: This method is **triggered when the Host Service Starts**. It initializes data **loading** for configured **PDFs into a Vector Store**, preparing the data for vector-based searches
+
+Then, it begins a continuous chat loop (ChatLoopAsync) that waits for user input
+
+**StopAsync**: Ends the service, though currently, it doesn’t perform any specific cleanup
+
+**ChatLoopAsync**: This asynchronous method **handles user queries**. It waits for PDFs to finish loading and then prompts the user to enter questions
+
+Upon receiving a question, it uses the **SearchPlugin** to **query** the **vector store** for relevant content
+
+If relevant content is found, it is displayed as a response to the user. Otherwise, it provides a fallback message, or the LLM tries to answer based on general knowledge
+
+**LoadDataAsync**: This method iteratively **loads PDFs** specified in the configuration **into the vector store**
+
+Each PDF is processed in batches, respecting delay and batch size settings to optimize the process and handle large files
+
+**Error Handling and Messaging**: Errors in data loading or LLM calls are captured and displayed, providing clear feedback when issues arise, such as failed PDF loading or unhandled questions
+
+This setup allows users to **query content within PDFs** through a **chat interface**, leveraging a **vector store** to improve retrieval accuracy for large documents, and is designed for scalability and graceful shutdown within a host environment
+
 ```csharp
 // Copyright (c) Microsoft. All rights reserved.
 
