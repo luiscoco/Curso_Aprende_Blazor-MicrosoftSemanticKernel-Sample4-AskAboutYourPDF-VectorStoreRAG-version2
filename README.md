@@ -562,6 +562,36 @@ static void RegisterServices<TKey>(HostApplicationBuilder builder, IKernelBuilde
 
 This class that loads text from a **PDF file into a Vector Store**
 
+This code defines a **DataLoader** class, which loads content (text and images) from a **PDF** into a **Vector Database** (or vector store)
+
+It uses Microsoft libraries for vector data management, embeddings, and chat completion and leverages the PdfPig library for PDF parsing
+
+**Class Definition and Generics**: The **DataLoader** class is a generic type, where TKey represents a unique identifier for each record in the vector store
+
+The class requires instances of a key generator, a vector store collection, an embedding generation service, and a chat completion service to function
+
+**Loading and Processing PDFs (LoadPdf method)**:
+
+This method takes a PDF path and parameters for batch processing, such as batch size and delay between batches
+
+It reads text and images from the PDF in batches, converting any images to text using the chatCompletionService
+
+For each text snippet, it generates a unique key, associates a reference to the PDF page, and generates an embedding for the text
+
+This data is then upserted (inserted or updated) into the vector database.
+
+**Extracting Content from PDFs (LoadTextAndImages method)**: This helper method uses **PdfPig** to extract pages and their content (text and images) from the PDF
+
+Text is segmented into blocks and images are processed and stored along with the page number
+
+**Retry Mechanisms**: Two methods include retry logic: **GenerateEmbeddingsWithRetryAsync** and **ConvertImageToTextWithRetryAsync**
+
+These retries handle transient failures (e.g., rate-limiting errors indicated by TooManyRequests status) and delay before retrying up to three times
+
+**Data Models**: RawContent is a private class that represents the content of a PDF page, storing either text or an image and the page number
+
+Overall, this class reads and **processes PDF data to generate Embeddings and load them into a Vector Store**, enabling efficient storage and retrieval in applications like search or **Retrieval-Augmented Generation (RAG)** systems
+
 ```csharp
 // Copyright (c) Microsoft. All rights reserved.
 
