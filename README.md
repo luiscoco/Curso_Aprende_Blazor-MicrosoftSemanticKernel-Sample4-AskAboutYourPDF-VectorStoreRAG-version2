@@ -352,47 +352,37 @@ Configuration files in the Options folder manage different AI and vector store s
 
 ## 5. Middleware (Program.cs) explanation
 
-### 5.1. Application Configuration
-
-The code begins by configuring the **host application**, setting up **HostApplicationBuilder** to load user secrets and read settings from configuration files
+**Application Configuration**: the code begins by configuring the **host application**, setting up **HostApplicationBuilder** to load user secrets and read settings from configuration files
 
 It loads various service settings, such as those for AI services and vector storage
 
-## 5.2. Dependency Injection Setup
+**Dependency Injection Setup**:
 
 **builder.Services.Configure<RagConfig>** loads the settings from the configuration and makes them available for injection across the application
 
 **builder.Services.AddKeyedSingleton("AppShutdown", appShutdownCancellationTokenSource);** sets up a cancellation token to manage graceful application shutdown, allowing the app to end processes smoothly when required.
 
-## 5.3. AI and Embedding Service Registration
-
-Based on the configuration, the code sets up either Azure OpenAI or OpenAI as the Chat and Embedding service, depending on the user’s preferences in the configuration file
+**AI and Embedding Service Registration**: Based on the configuration, the code sets up either Azure OpenAI or OpenAI as the Chat and Embedding service, depending on the user’s preferences in the configuration file
 
 The code selects the appropriate API and endpoint details for connecting to these services
 
-## 5.4. Vector Store Registration
-
-The code supports multiple vector storage options (e.g., Azure AI Search, CosmosDB, In-Memory, Qdrant, Redis, Weaviate)
+**Vector Store Registration**: The code supports multiple vector storage options (e.g., Azure AI Search, CosmosDB, In-Memory, Qdrant, Redis, Weaviate)
 
 Based on the configuration, it adds the relevant vector storage provider to the dependency injection containe
 
 This flexibility allows the application to store and retrieve vectorized data (text embeddings) from different backends, depending on the setup
 
-## 5.5. Registering Additional Services
-
-It defines a **RegisterServices<TKey>** method to set up specific dependencies, like **UniqueKeyGenerator** and **DataLoader**, used by the main application
+**Registering Additional Services**: It defines a **RegisterServices<TKey>** method to set up specific dependencies, like **UniqueKeyGenerator** and **DataLoader**, used by the main application
 
 This method also registers the main **RAGChatService<TKey>**, a hosted service that **runs continuously** and handles interactions (likely for a Retrieval-Augmented Generation chat service) in the background
 
-## 5.6. Running the Application
-
-Finally, the **host.RunAsync(appShutdownCancellationToken).ConfigureAwait(false)**; line builds and starts the **host application**, running the service continuously until the cancellation token signals a shutdown.
+**Running the Application**: Finally, the **host.RunAsync(appShutdownCancellationToken).ConfigureAwait(false)**; line builds and starts the **host application**, running the service continuously until the cancellation token signals a shutdown.
 
 Overall, this code sets up a flexible, **background service** with dependency injection and configurations for different AI and vector store providers
 
 It’s designed to support an **AI-driven Chat Service** or similar long-running process that leverages embeddings and vector search
 
-## 5.7. Program.cs code
+**Program.cs**:
 
 ```csharp
 // Copyright (c) Microsoft. All rights reserved.
