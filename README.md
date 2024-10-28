@@ -6,6 +6,10 @@ Also ask questions about the content using an **LLM(Large Language Model)** whil
 
 ![image](https://github.com/user-attachments/assets/0b17e275-2d3d-4a52-a287-5781d7542c85)
 
+In short, this code sets up a **Hosted Service** within a .NET Core application, suitable for a **background application** or API server that needs to **run continuously** and manage external service dependencies
+
+A **Console Application**, on the other hand, is more suited to simpler, finite tasks that don’t require such extensive dependency management or runtime control
+
 ## 1. Configuring the Sample
 
 The sample can be configured in various ways:
