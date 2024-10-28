@@ -308,7 +308,7 @@ This flexibility allows the application to store and retrieve vectorized data (t
 
 ## 4.5. Registering Additional Services
 
-It defines a **RegisterServices<TKey>** method to set up specific dependencies, like UniqueKeyGenerator and DataLoader, used by the main application
+It defines a **RegisterServices<TKey>** method to set up specific dependencies, like **UniqueKeyGenerator** and **DataLoader**, used by the main application
 
 This method also registers the main **RAGChatService<TKey>**, a hosted service that **runs continuously** and handles interactions (likely for a Retrieval-Augmented Generation chat service) in the background
 
@@ -318,4 +318,4 @@ Finally, the **host.RunAsync(appShutdownCancellationToken).ConfigureAwait(false)
 
 Overall, this code sets up a flexible, **background service** with dependency injection and configurations for different AI and vector store providers
 
-It’s designed to support an AI-driven chat service or similar long-running process that leverages embeddings and vector search
+It’s designed to support an **AI-driven Chat Service** or similar long-running process that leverages embeddings and vector search
