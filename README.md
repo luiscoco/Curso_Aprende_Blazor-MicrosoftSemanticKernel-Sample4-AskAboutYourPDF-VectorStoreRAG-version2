@@ -317,3 +317,410 @@ Finally, the **host.RunAsync(appShutdownCancellationToken).ConfigureAwait(false)
 Overall, this code sets up a flexible, **background service** with dependency injection and configurations for different AI and vector store providers
 
 It’s designed to support an **AI-driven Chat Service** or similar long-running process that leverages embeddings and vector search
+
+## 5. Data Loader
+
+This class that loads text from a **PDF file into a Vector Store**
+
+```csharp
+// Copyright (c) Microsoft. All rights reserved.
+
+using System.Net;
+using Microsoft.Extensions.VectorData;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Embeddings;
+using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
+using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
+
+namespace VectorStoreRAG;
+
+/// <summary>
+/// Class that loads text from a PDF file into a vector store.
+/// </summary>
+/// <typeparam name="TKey">The type of the data model key.</typeparam>
+/// <param name="uniqueKeyGenerator">A function to generate unique keys with.</param>
+/// <param name="vectorStoreRecordCollection">The collection to load the data into.</param>
+/// <param name="textEmbeddingGenerationService">The service to use for generating embeddings from the text.</param>
+/// <param name="chatCompletionService">The chat completion service to use for generating text from images.</param>
+internal sealed class DataLoader<TKey>(
+    UniqueKeyGenerator<TKey> uniqueKeyGenerator,
+    IVectorStoreRecordCollection<TKey, TextSnippet<TKey>> vectorStoreRecordCollection,
+    ITextEmbeddingGenerationService textEmbeddingGenerationService,
+    IChatCompletionService chatCompletionService) : IDataLoader where TKey : notnull
+{
+    /// <inheritdoc/>
+    public async Task LoadPdf(string pdfPath, int batchSize, int betweenBatchDelayInMs, CancellationToken cancellationToken)
+    {
+        // Create the collection if it doesn't exist.
+        await vectorStoreRecordCollection.CreateCollectionIfNotExistsAsync(cancellationToken).ConfigureAwait(false);
+
+        // Load the text and images from the PDF file and split them into batches.
+        var sections = LoadTextAndImages(pdfPath, cancellationToken);
+        var batches = sections.Chunk(batchSize);
+
+        // Process each batch of content items.
+        foreach (var batch in batches)
+        {
+            // Convert any images to text.
+            var textContentTasks = batch.Select(async content =>
+            {
+                if (content.Text != null)
+                {
+                    return content;
+                }
+
+                var textFromImage = await ConvertImageToTextWithRetryAsync(
+                    chatCompletionService,
+                    content.Image!.Value,
+                    cancellationToken).ConfigureAwait(false);
+                return new RawContent { Text = textFromImage, PageNumber = content.PageNumber };
+            });
+            var textContent = await Task.WhenAll(textContentTasks).ConfigureAwait(false);
+
+            // Map each paragraph to a TextSnippet and generate an embedding for it.
+            var recordTasks = textContent.Select(async content => new TextSnippet<TKey>
+            {
+                Key = uniqueKeyGenerator.GenerateKey(),
+                Text = content.Text,
+                ReferenceDescription = $"{new FileInfo(pdfPath).Name}#page={content.PageNumber}",
+                ReferenceLink = $"{new Uri(new FileInfo(pdfPath).FullName).AbsoluteUri}#page={content.PageNumber}",
+                TextEmbedding = await GenerateEmbeddingsWithRetryAsync(textEmbeddingGenerationService, content.Text!, cancellationToken: cancellationToken).ConfigureAwait(false)
+            });
+
+            // Upsert the records into the vector store.
+            var records = await Task.WhenAll(recordTasks).ConfigureAwait(false);
+            var upsertedKeys = vectorStoreRecordCollection.UpsertBatchAsync(records, cancellationToken: cancellationToken);
+            await foreach (var key in upsertedKeys.ConfigureAwait(false))
+            {
+                Console.WriteLine($"Upserted record '{key}' into VectorDB");
+            }
+
+            await Task.Delay(betweenBatchDelayInMs, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Read the text and images from each page in the provided PDF file.
+    /// </summary>
+    /// <param name="pdfPath">The pdf file to read the text and images from.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor for cancellation requests.</param>
+    /// <returns>The text and images from the pdf file, plus the page number that each is on.</returns>
+    private static IEnumerable<RawContent> LoadTextAndImages(string pdfPath, CancellationToken cancellationToken)
+    {
+        using (PdfDocument document = PdfDocument.Open(pdfPath))
+        {
+            foreach (Page page in document.GetPages())
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                foreach (var image in page.GetImages())
+                {
+                    if (image.TryGetPng(out var png))
+                    {
+                        yield return new RawContent { Image = png, PageNumber = page.Number };
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Unsupported image format on page {page.Number}");
+                    }
+                }
+
+                var blocks = DefaultPageSegmenter.Instance.GetBlocks(page.GetWords());
+                foreach (var block in blocks)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    yield return new RawContent { Text = block.Text, PageNumber = page.Number };
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Add a simple retry mechanism to embedding generation.
+    /// </summary>
+    /// <param name="textEmbeddingGenerationService">The embedding generation service.</param>
+    /// <param name="text">The text to generate the embedding for.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor for cancellation requests.</param>
+    /// <returns>The generated embedding.</returns>
+    private static async Task<ReadOnlyMemory<float>> GenerateEmbeddingsWithRetryAsync(ITextEmbeddingGenerationService textEmbeddingGenerationService, string text, CancellationToken cancellationToken)
+    {
+        var tries = 0;
+
+        while (true)
+        {
+            try
+            {
+                return await textEmbeddingGenerationService.GenerateEmbeddingAsync(text, cancellationToken: cancellationToken).ConfigureAwait(false);
+            }
+            catch (HttpOperationException ex) when (ex.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                tries++;
+
+                if (tries < 3)
+                {
+                    Console.WriteLine($"Failed to generate embedding. Error: {ex}");
+                    Console.WriteLine("Retrying embedding generation...");
+                    await Task.Delay(10_000, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Add a simple retry mechanism to image to text.
+    /// </summary>
+    /// <param name="chatCompletionService">The chat completion service to use for generating text from images.</param>
+    /// <param name="imageBytes">The image to generate the text for.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor for cancellation requests.</param>
+    /// <returns>The generated text.</returns>
+    private static async Task<string> ConvertImageToTextWithRetryAsync(
+        IChatCompletionService chatCompletionService,
+        ReadOnlyMemory<byte> imageBytes,
+        CancellationToken cancellationToken)
+    {
+        var tries = 0;
+
+        while (true)
+        {
+            try
+            {
+                var chatHistory = new ChatHistory();
+                chatHistory.AddUserMessage([
+                    new TextContent("What’s in this image?"),
+                    new ImageContent(imageBytes, "image/png"),
+                ]);
+                var result = await chatCompletionService.GetChatMessageContentsAsync(chatHistory, cancellationToken: cancellationToken).ConfigureAwait(false);
+                return string.Join("\n", result.Select(x => x.Content));
+            }
+            catch (HttpOperationException ex) when (ex.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                tries++;
+
+                if (tries < 3)
+                {
+                    Console.WriteLine($"Failed to generate text from image. Error: {ex}");
+                    Console.WriteLine("Retrying text to image conversion...");
+                    await Task.Delay(10_000, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Private model for returning the content items from a PDF file.
+    /// </summary>
+    private sealed class RawContent
+    {
+        public string? Text { get; init; }
+
+        public ReadOnlyMemory<byte>? Image { get; init; }
+
+        public int PageNumber { get; init; }
+    }
+}
+```
+
+## 6. RAG Chat Service
+
+```csharp
+// Copyright (c) Microsoft. All rights reserved.
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Data;
+using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
+using VectorStoreRAG.Options;
+
+namespace VectorStoreRAG;
+
+/// <summary>
+/// Main service class for the application.
+/// </summary>
+/// <typeparam name="TKey">The type of the data model key.</typeparam>
+/// <param name="dataLoader">Used to load data into the vector store.</param>
+/// <param name="vectorStoreTextSearch">Used to search the vector store.</param>
+/// <param name="kernel">Used to make requests to the LLM.</param>
+/// <param name="ragConfigOptions">The configuration options for the application.</param>
+/// <param name="appShutdownCancellationTokenSource">Used to gracefully shut down the entire application when cancelled.</param>
+internal sealed class RAGChatService<TKey>(
+    IDataLoader dataLoader,
+    VectorStoreTextSearch<TextSnippet<TKey>> vectorStoreTextSearch,
+    Kernel kernel,
+    IOptions<RagConfig> ragConfigOptions,
+    [FromKeyedServices("AppShutdown")] CancellationTokenSource appShutdownCancellationTokenSource) : IHostedService
+{
+    private Task? _dataLoaded;
+    private Task? _chatLoop;
+
+    /// <summary>
+    /// Start the service.
+    /// </summary>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor for cancellation requests.</param>
+    /// <returns>An async task that completes when the service is started.</returns>
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        // Start to load all the configured PDFs into the vector store.
+        if (ragConfigOptions.Value.BuildCollection)
+        {
+            this._dataLoaded = this.LoadDataAsync(cancellationToken);
+        }
+        else
+        {
+            this._dataLoaded = Task.CompletedTask;
+        }
+
+        // Start the chat loop.
+        this._chatLoop = this.ChatLoopAsync(cancellationToken);
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Stop the service.
+    /// </summary>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor for cancellation requests.</param>
+    /// <returns>An async task that completes when the service is stopped.</returns>
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    private async Task ChatLoopAsync(CancellationToken cancellationToken)
+    {
+        var pdfFiles = string.Join(", ", ragConfigOptions.Value.PdfFilePaths ?? []);
+
+        // Wait for the data to be loaded before starting the chat loop.
+        while (this._dataLoaded != null && !this._dataLoaded.IsCompleted && !cancellationToken.IsCancellationRequested)
+        {
+            await Task.Delay(1_000, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (this._dataLoaded != null && this._dataLoaded.IsFaulted)
+        {
+            Console.WriteLine("Failed to load data");
+            return;
+        }
+
+        Console.WriteLine("PDF loading complete\n");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("Assistant > Press enter with no prompt to exit.");
+
+        kernel.Plugins.Add(vectorStoreTextSearch.CreateWithGetTextSearchResults("SearchPlugin"));
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"Assistant > What would you like to know from the loaded PDFs: ({pdfFiles})?");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("User > ");
+            var question = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(question))
+            {
+                appShutdownCancellationTokenSource.Cancel();
+                break;
+            }
+
+            // Execute the vector store search plugin and check if it returned any results.
+            var response = kernel.InvokePromptStreamingAsync(
+                promptTemplate: """
+                Please use this information to answer the question:
+                {{#with (SearchPlugin-GetTextSearchResults question)}}
+                    {{#if this}}
+                        Please provide the full content or excerpt related to: "{{question}}".
+                        {{#each this}}
+                            Name: {{Name}}
+                            Value: {{Value}}
+                            Link: {{Link}}
+                            -----------------
+                        {{/each}}
+                    {{else}}
+                        No relevant information was found in the loaded PDFs. Please answer based on general knowledge if possible.
+                    {{/if}}
+                {{/with}}
+                
+                Question: {{question}}
+            """,
+                arguments: new KernelArguments()
+                {
+                { "question", question },
+                },
+                templateFormat: "handlebars",
+                promptTemplateFactory: new HandlebarsPromptTemplateFactory(),
+                cancellationToken: cancellationToken);
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("\nAssistant > ");
+
+            try
+            {
+                bool hasOutput = false;
+
+                await foreach (var message in response.ConfigureAwait(false))
+                {
+                    hasOutput = true;
+                    Console.Write(message);
+                }
+
+                if (!hasOutput)
+                {
+                    Console.WriteLine("No relevant information was found in the vector store. The assistant could not retrieve the requested content.");
+                }
+
+                Console.WriteLine();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Call to LLM failed with error: {ex}");
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// Load all configured PDFs into the vector store.
+    /// </summary>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor for cancellation requests.</param>
+    /// <returns>An async task that completes when the loading is complete.</returns>
+    private async Task LoadDataAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            foreach (var pdfFilePath in ragConfigOptions.Value.PdfFilePaths ?? [])
+            {
+                Console.WriteLine($"Loading PDF into vector store: {pdfFilePath}");
+                await dataLoader.LoadPdf(
+                    pdfFilePath,
+                    ragConfigOptions.Value.DataLoadingBatchSize,
+                    ragConfigOptions.Value.DataLoadingBetweenBatchDelayInMilliseconds,
+                    cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load PDFs: {ex}");
+            throw;
+        }
+    }
+}
+```
