@@ -10,7 +10,7 @@ In short, this code sets up a **Hosted Service** within a .NET Core application,
 
 A **Console Application**, on the other hand, is more suited to simpler, finite tasks that don’t require such extensive dependency management or runtime control
 
-## 1. Configuring the Sample
+## 1. Configuring the Application
 
 The sample can be configured in various ways depending on the **appsettings.json** file content:
 
@@ -344,27 +344,33 @@ This solution structure shows a typical .NET Core hosted service application, fo
 
 Configuration files in the Options folder manage different AI and vector store settings, while core files like RAGChatService.cs and DataLoader.cs handle data management and processing
 
-## 4. Middleware (Program.cs) explanation
+## 4. Nuget Packages
 
-### 4.1. Application Configuration
+![image](https://github.com/user-attachments/assets/62beeedb-2fba-4a23-bef4-9c54b749535b)
+
+![image](https://github.com/user-attachments/assets/7e635a04-856e-4a79-b16c-cb317d8c2e7e)
+
+## 5. Middleware (Program.cs) explanation
+
+### 5.1. Application Configuration
 
 The code begins by configuring the **host application**, setting up **HostApplicationBuilder** to load user secrets and read settings from configuration files
 
 It loads various service settings, such as those for AI services and vector storage
 
-## 4.2. Dependency Injection Setup
+## 5.2. Dependency Injection Setup
 
 **builder.Services.Configure<RagConfig>** loads the settings from the configuration and makes them available for injection across the application
 
 **builder.Services.AddKeyedSingleton("AppShutdown", appShutdownCancellationTokenSource);** sets up a cancellation token to manage graceful application shutdown, allowing the app to end processes smoothly when required.
 
-## 4.3. AI and Embedding Service Registration
+## 5.3. AI and Embedding Service Registration
 
 Based on the configuration, the code sets up either Azure OpenAI or OpenAI as the Chat and Embedding service, depending on the user’s preferences in the configuration file
 
 The code selects the appropriate API and endpoint details for connecting to these services
 
-## 4.4. Vector Store Registration
+## 5.4. Vector Store Registration
 
 The code supports multiple vector storage options (e.g., Azure AI Search, CosmosDB, In-Memory, Qdrant, Redis, Weaviate)
 
@@ -372,13 +378,13 @@ Based on the configuration, it adds the relevant vector storage provider to the 
 
 This flexibility allows the application to store and retrieve vectorized data (text embeddings) from different backends, depending on the setup
 
-## 4.5. Registering Additional Services
+## 5.5. Registering Additional Services
 
 It defines a **RegisterServices<TKey>** method to set up specific dependencies, like **UniqueKeyGenerator** and **DataLoader**, used by the main application
 
 This method also registers the main **RAGChatService<TKey>**, a hosted service that **runs continuously** and handles interactions (likely for a Retrieval-Augmented Generation chat service) in the background
 
-## 4.6. Running the Application
+## 5.6. Running the Application
 
 Finally, the **host.RunAsync(appShutdownCancellationToken).ConfigureAwait(false)**; line builds and starts the **host application**, running the service continuously until the cancellation token signals a shutdown.
 
@@ -386,7 +392,7 @@ Overall, this code sets up a flexible, **background service** with dependency in
 
 It’s designed to support an **AI-driven Chat Service** or similar long-running process that leverages embeddings and vector search
 
-## 5. Data Loader
+## 6. Data Loader
 
 This class that loads text from a **PDF file into a Vector Store**
 
@@ -605,7 +611,7 @@ internal sealed class DataLoader<TKey>(
 }
 ```
 
-## 6. RAG Chat Service
+## 7. RAG Chat Service
 
 ```csharp
 // Copyright (c) Microsoft. All rights reserved.
