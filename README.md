@@ -144,7 +144,7 @@ dotnet user-secrets set "AIServices:OpenAIEmbeddings:OrgId" "<your org id>"
 
 ### 2.6. Azure AI Search
 
-If you want to use **Azure AI Search** as your vector store, you will need to create an instance of Azure AI Search and add the following **secrets** here:
+If you want to use **Azure AI Search** as your **Vector Store**, you will need to create an instance of Azure AI Search and add the following **secrets** here:
 
 ```cli
 dotnet user-secrets set "VectorStores:AzureAISearch:Endpoint" "https://<yourservice>.search.windows.net"
@@ -153,7 +153,7 @@ dotnet user-secrets set "VectorStores:AzureAISearch:ApiKey" "<yoursecret>"
 
 ### 2.7. Azure CosmosDB MongoDB
 
-If you want to use **Azure CosmosDB MongoDB** as your vector store, you will need to create an instance of Azure CosmosDB MongoDB and add the following **secrets** here:
+If you want to use **Azure CosmosDB MongoDB** as your **Vector Store**, you will need to create an instance of Azure CosmosDB MongoDB and add the following **secrets** here:
 
 ```cli
 dotnet user-secrets set "VectorStores:AzureCosmosDBMongoDB:ConnectionString" "<yourconnectionstring>"
@@ -162,7 +162,7 @@ dotnet user-secrets set "VectorStores:AzureCosmosDBMongoDB:DatabaseName" "<yourd
 
 ### 2.8. Azure CosmosDB NoSQL
 
-If you want to use **Azure CosmosDB NoSQL** as your vector store, you will need to create an instance of Azure CosmosDB NoSQL and add the following **secrets** here:
+If you want to use **Azure CosmosDB NoSQL** as your **Vector Store**, you will need to create an instance of Azure CosmosDB NoSQL and add the following **secrets** here:
 
 ```cli
 dotnet user-secrets set "VectorStores:AzureCosmosDBNoSQL:ConnectionString" "<yourconnectionstring>"
@@ -171,7 +171,7 @@ dotnet user-secrets set "VectorStores:AzureCosmosDBNoSQL:DatabaseName" "<yourdbn
 
 ### 2.9. Qdrant
 
-If you want to use **Qdrant** as your vector store, you will need to have an instance of Qdrant available
+If you want to use **Qdrant** as your **Vector Store**, you will need to have an instance of Qdrant available
 
 You can use the following command to start a **Qdrant instance in Docker**, and this will work with the default configured settings:
 
@@ -190,7 +190,7 @@ dotnet user-secrets set "VectorStores:Qdrant:ApiKey" "<yoursecret>"
 
 ### 2.10. Redis
 
-If you want to use **Redis** as your vector store, you will need to have an instance of Redis available
+If you want to use **Redis** as your **Vector Store**, you will need to have an instance of Redis available
 
 You can use the following command to start a **Redis instance in Docker**, and this will work with the default configured settings:
 
@@ -204,17 +204,17 @@ If you want to use a **different instance of Redis**, you can update the appsett
 dotnet user-secrets set "VectorStores:Redis:ConnectionConfiguration" "<yourredisconnectionconfiguration>"
 ```
 
-### Weaviate
+### 2.11. Weaviate
 
-If you want to use Weaviate as your vector store, you will need to have an instance of Weaviate available.
+If you want to use **Weaviate** as your **Vector Store**, you will need to have an instance of Weaviate available.
 
-You can use the following command to start a Weaviate instance in docker, and this will work with the default configured settings:
+You can use the following command to start a **Weaviate instance in Docker**, and this will work with the default configured settings:
 
 ```cli
 docker run -d --name weaviate -p 8080:8080 -p 50051:50051 cr.weaviate.io/semitechnologies/weaviate:1.26.4
 ```
 
-If you want to use a different instance of Weaviate, you can update the appsettings.json file or add the following secret to reconfigure:
+If you want to use a **different instance of Weaviate**, you can update the **appsettings.json** file or add the following secret to reconfigure:
 
 ```cli
 dotnet user-secrets set "VectorStores:Weaviate:Endpoint" "<yourweaviateurl>"
