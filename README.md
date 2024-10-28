@@ -1,7 +1,10 @@
 ﻿# Vector Store RAG Demo
 
-This sample demonstrates how to ingest text from pdf files into a vector store and ask questions about the content
-using an LLM while using RAG to supplement the LLM with additional information from the vector store.
+This sample demonstrates how to **ingest** text from **PDF** files into a **vector store**
+
+Also ask questions about the content using an **LLM(Large Language Model)** while using **RAG(Retrieval Augment Generate)** to supplement the LLM with additional information from the vector store
+
+![image](https://github.com/user-attachments/assets/0b17e275-2d3d-4a52-a287-5781d7542c85)
 
 ## 1. Configuring the Sample
 
@@ -9,68 +12,69 @@ The sample can be configured in various ways:
 
 ### 1.1 Choose the Vector Store
 
-   Choose your preferred vector store by setting the `Rag:VectorStoreType` configuration setting in the `appsettings.json` file to one of the following values:
+Choose your preferred vector store by setting the `Rag:VectorStoreType` configuration setting in the `appsettings.json` file to one of the following values:
    
-   AzureAISearch
+AzureAISearch
    
-   AzureCosmosDBMongoDB
+AzureCosmosDBMongoDB
    
-   AzureCosmosDBNoSQL
+AzureCosmosDBNoSQL
    
-   InMemory
+InMemory
 
-   Qdrant
+Qdrant
    
-   Redis
+Redis
    
-   Weaviate
+Weaviate
 
 ### 1.2. Choose the AI Chat Service
 
-   You can choose your preferred AI Chat service by settings the `Rag:AIChatService` configuration setting in the `appsettings.json` file to one of the following values:
+You can choose your preferred AI Chat service by settings the `Rag:AIChatService` configuration setting in the `appsettings.json` file to one of the following values:
   
-   AzureOpenAI
+AzureOpenAI
    
-   OpenAI
+OpenAI
 
 ### 1.3. Choose the AI Embedding Service 
 
-   You can choose your preferred AI Embedding service by settings the `Rag:AIEmbeddingService` configuration setting in the `appsettings.json` file to one of the following values:
+You can choose your preferred AI Embedding service by settings the `Rag:AIEmbeddingService` configuration setting in the `appsettings.json` file to one of the following values:
    
-   AzureOpenAIEmbeddings
+AzureOpenAIEmbeddings
    
-   OpenAIEmbeddings
+OpenAIEmbeddings
 
 ### 1.4. Load data into the vector store or Loaded data previously
 
-You can choose whether to load data into the vector store by setting the `Rag:BuildCollection` configuration setting in the `appsettings.json` file to `true`
+You can choose whether to load data into the vector store by setting the `**Rag:BuildCollection**` configuration setting in the `**appsettings.json**` file to `**true**`
 
-If you set this to `false`, the sample will assume that data was already loaded previously and it will go straight into the chat experience
+If you set this to `**false**`, the sample will assume that data was already loaded previously and it will go straight into the chat experience
 
 ### 1.5. Input the CollectionName
 
-You can choose the name of the collection to use by setting the `Rag:CollectionName` configuration setting in the `appsettings.json` file
+You can choose the name of the collection to use by setting the `**Rag:CollectionName**` configuration setting in the `**appsettings.json**` file
 
 ### 1.6. Choose the PDF File to load
 
-You can choose the pdf file to load into the vector store by setting the `Rag:PdfFilePaths` array in the `appsettings.json` file
+You can choose the pdf file to load into the vector store by setting the `**Rag:PdfFilePaths**` array in the `**appsettings.json**` file
 
 ### 1.7. Set the number of records to process
 
-You can choose the number of records to process per batch when loading data into the vector store by setting the `Rag:DataLoadingBatchSize` configuration setting in the `appsettings.json` file
+You can choose the number of records to process per batch when loading data into the vector store by setting the `**Rag:DataLoadingBatchSize**` configuration setting in the `**appsettings.json**` file
 
 ### 1.8. Set the time to wait between batches
 
-You can choose the number of milliseconds to wait between batches when loading data into the vector store by setting the `Rag:DataLoadingBetweenBatchDelayInMilliseconds` configuration setting in the `appsettings.json` file
+You can choose the number of milliseconds to wait between batches when loading data into the vector store by setting the `**Rag:DataLoadingBetweenBatchDelayInMilliseconds**` configuration setting in the `**appsettings.json**` file
 
 ## 2. Dependency Setup
 
 To run this sample, you need to setup your source data, setup your vector store and AI services, and setup secrets for these
 
-### Source PDF File
+### 2.1. Source PDF File
 
-You will need to supply some source pdf files to load into the vector store.
-Once you have a file ready, update the `PdfFilePaths` array in the `appsettings.json` file with the path to the file.
+You will need to supply some source pdf files to load into the vector store\
+
+Once you have a file ready, update the `**PdfFilePaths**` array in the `**appsettings.json**` file with the path to the file.
 
 ```json
 {
@@ -81,7 +85,9 @@ Once you have a file ready, update the `PdfFilePaths` array in the `appsettings.
 ```
 
 Why not try the semantic kernel documentation as your input.
+
 You can download it as a PDF from the https://learn.microsoft.com/en-us/semantic-kernel/overview/ page.
+
 See the Download PDF button at the bottom of the page.
 
 ### Azure OpenAI Chat Completion
