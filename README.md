@@ -236,8 +236,6 @@ This folder contains configuration classes related to different **external servi
 
 Each of these classes likely maps to sections in the **appsettings.json** configuration file, allowing the application to read and manage settings for various service integrations
 
-**Key files**:
-
 **ApplicationConfig.cs**: Probably the main configuration class that brings together various configuration settings
 
 **AzureAISearchConfig.cs**, **AzureCosmosDBConfig.cs**, **etc**: These files define settings for specific services (Azure AI Search, CosmosDB, OpenAI, etc.), making it easier to manage configurations for multiple vector stores and AI services
