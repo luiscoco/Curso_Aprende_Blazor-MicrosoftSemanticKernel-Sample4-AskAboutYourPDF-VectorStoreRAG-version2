@@ -12,7 +12,75 @@ A **Console Application**, on the other hand, is more suited to simpler, finite 
 
 ## 1. Configuring the Sample
 
-The sample can be configured in various ways:
+The sample can be configured in various ways depending on the **appsettings.json** file content:
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "None"
+    }
+  },
+  "AIServices": {
+    "AzureOpenAI": {
+      "Endpoint": "https://luisaiservice.openai.azure.com/",
+      "ChatDeploymentName": "gpt-4o",
+      "ApiKey": ""
+    },
+    "AzureOpenAIEmbeddings": {
+      "Endpoint": "https://luisaiservice.openai.azure.com/",
+      "DeploymentName": "text-embedding-ada-002",
+      "ApiKey": ""
+    },
+    "OpenAI": {
+      "ModelId": "gpt-4o",
+      "ApiKey": "",
+      "OrgId": null
+    },
+    "OpenAIEmbeddings": {
+      "ModelId": "text-embedding-3-small",
+      "ApiKey": "",
+      "OrgId": null
+    }
+  },
+  "VectorStores": {
+    "AzureAISearch": {
+      "Endpoint": "",
+      "ApiKey": ""
+    },
+    "AzureCosmosDBMongoDB": {
+      "ConnectionString": "",
+      "DatabaseName": ""
+    },
+    "AzureCosmosDBNoSQL": {
+      "ConnectionString": "",
+      "DatabaseName": ""
+    },
+    "Qdrant": {
+      "Host": "localhost",
+      "Port": 6334,
+      "Https": false,
+      "ApiKey": ""
+    },
+    "Redis": {
+      "ConnectionConfiguration": "localhost:6379"
+    },
+    "Weaviate": {
+      "Endpoint": "http://localhost:8080/v1/"
+    }
+  },
+  "Rag": {
+    "AIChatService": "AzureOpenAI",
+    "AIEmbeddingService": "AzureOpenAIEmbeddings",
+    "BuildCollection": true,
+    "CollectionName": "pdfcontent",
+    "DataLoadingBatchSize": 10,
+    "DataLoadingBetweenBatchDelayInMilliseconds": 1000,
+    "PdfFilePaths": [ "C:\\AskAboutYourPDF-VectorStoreRAG\\BOE-A-1980-8650-consolidado.pdf" ],
+    "VectorStoreType": "InMemory"
+  }
+}
+```
 
 ### 1.1 Choose the Vector Store
 
