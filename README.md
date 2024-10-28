@@ -223,3 +223,99 @@ If you want to use a **different instance of Weaviate**, you can update the **ap
 ```cli
 dotnet user-secrets set "VectorStores:Weaviate:Endpoint" "<yourweaviateurl>"
 ```
+
+## 3. Application folders and files structure
+
+![image](https://github.com/user-attachments/assets/0688ffc3-7c6b-40c0-8c52-878f688b7d51)
+
+Looking at the structure of the VectorStoreRAG solution, here’s a brief overview of the folders and files based on common conventions in a .NET project:
+
+### 3.1. Options Folder
+
+This folder contains configuration classes related to different **external services**
+
+Each of these classes likely maps to sections in the **appsettings.json** configuration file, allowing the application to read and manage settings for various service integrations
+
+**Key files**:
+
+**ApplicationConfig.cs**: Probably the main configuration class that brings together various configuration settings
+
+**AzureAISearchConfig.cs**, **AzureCosmosDBConfig.cs**, **etc**: These files define settings for specific services (Azure AI Search, CosmosDB, OpenAI, etc.), making it easier to manage configurations for multiple vector stores and AI services
+
+**RagConfig.cs**: This might be a central configuration class that aggregates settings for the RAG (Retrieval-Augmented Generation) setup, possibly determining which AI or vector store service to use
+
+### 3.2. Root Files
+
+**.gitattributes** and **.gitignore**: These files are for Git configuration. .gitignore specifies files and folders that Git should ignore (e.g., build outputs, secrets), while .gitattributes manages Git’s handling of text and binary files.
+
+**appsettings.json**: The main configuration file for the application, where most settings are defined, such as API keys, endpoints, and other configurable values
+
+**BOE-A-1980-8650-consolidado.pdf**: This PDF file might be a document referenced in the application or for project documentation purposes
+
+### 3.3. Data and Service Classes
+
+**DataLoader.cs** and **IDataLoader.cs**: IDataLoader is likely an interface, while DataLoader is its implementation. These classes might be responsible for loading data into the vector store or retrieving data based on embeddings, facilitating search and retrieval operations
+
+**TextSnippet.cs**: This class might define the data structure used for storing text snippets or records in the vector store, including fields like Text or ReferenceLink
+
+### 3.4. Program.cs
+
+The **main entry point** of the application. This file contains the setup code that configures the host, dependency injection, services, and other application-level configurations before running the main hosted service.
+
+### 3.5. RAGChatService.cs
+
+This likely defines the main hosted service in the application.
+
+**RAGChatService** could be responsible for managing chat interactions using the Retrieval-Augmented Generation model, handling requests, generating responses, and interacting with the vector store for retrieval tasks.
+
+### 3.6. UniqueKeyGenerator.cs
+
+This class likely provides functionality to generate unique keys, potentially for indexing items in the vector store or assigning IDs to new records in the database.
+
+**Summary**
+
+This solution structure shows a typical .NET Core hosted service application, focused on a **Retrieval-Augmented Generation (RAG)** model with a vector store
+
+Configuration files in the Options folder manage different AI and vector store settings, while core files like RAGChatService.cs and DataLoader.cs handle data management and processing
+
+## 4. Middleware (Program.cs) explanation
+
+### 4.1. Application Configuration
+
+The code begins by configuring the **host application**, setting up **HostApplicationBuilder** to load user secrets and read settings from configuration files
+
+It loads various service settings, such as those for AI services and vector storage
+
+## 4.2. Dependency Injection Setup
+
+**builder.Services.Configure<RagConfig>** loads the settings from the configuration and makes them available for injection across the application
+
+**builder.Services.AddKeyedSingleton("AppShutdown", appShutdownCancellationTokenSource);** sets up a cancellation token to manage graceful application shutdown, allowing the app to end processes smoothly when required.
+
+## 4.3. AI and Embedding Service Registration
+
+Based on the configuration, the code sets up either Azure OpenAI or OpenAI as the Chat and Embedding service, depending on the user’s preferences in the configuration file
+
+The code selects the appropriate API and endpoint details for connecting to these services
+
+## 4.4. Vector Store Registration
+
+The code supports multiple vector storage options (e.g., Azure AI Search, CosmosDB, In-Memory, Qdrant, Redis, Weaviate)
+
+Based on the configuration, it adds the relevant vector storage provider to the dependency injection containe
+
+This flexibility allows the application to store and retrieve vectorized data (text embeddings) from different backends, depending on the setup
+
+## 4.5. Registering Additional Services
+
+It defines a **RegisterServices<TKey>** method to set up specific dependencies, like UniqueKeyGenerator and DataLoader, used by the main application
+
+This method also registers the main **RAGChatService<TKey>**, a hosted service that **runs continuously** and handles interactions (likely for a Retrieval-Augmented Generation chat service) in the background
+
+## 4.6. Running the Application
+
+Finally, the **host.RunAsync(appShutdownCancellationToken).ConfigureAwait(false)**; line builds and starts the **host application**, running the service continuously until the cancellation token signals a shutdown.
+
+Overall, this code sets up a flexible, **background service** with dependency injection and configurations for different AI and vector store providers
+
+It’s designed to support an AI-driven chat service or similar long-running process that leverages embeddings and vector search
