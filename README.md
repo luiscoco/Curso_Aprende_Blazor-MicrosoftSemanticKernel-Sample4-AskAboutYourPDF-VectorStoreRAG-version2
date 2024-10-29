@@ -1,4 +1,4 @@
-﻿# Vector Store RAG Demo
+﻿# Efficiently Searching PDF Content with AI: Leveraging LLMs and RAG for Enhanced Retrieval
 
 This sample demonstrates how to **ingest** text from **PDF** files into a **vector store**
 
